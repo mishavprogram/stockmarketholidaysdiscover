@@ -4,16 +4,16 @@ import com.opencsv.bean.CsvBindByName;
 import com.opencsv.bean.CsvCustomBindByName;
 import com.ua.mvp.stockmarketholidaysdiscover.converter.csv.BigDecimalBeanFieldConverter;
 import com.ua.mvp.stockmarketholidaysdiscover.converter.csv.LocalDateBeanFieldConverter;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.ToString;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Getter
 @Setter
-@ToString
+@EqualsAndHashCode
 public class Quote {
     @CsvCustomBindByName(column = "Date", converter = LocalDateBeanFieldConverter.class)
     private LocalDate date;

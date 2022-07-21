@@ -16,7 +16,7 @@ public class MarketHolidaysController {
     @Autowired
     private QuoteService quoteService;
 
-    @GetMapping("/market-holidays")
+    @GetMapping("/market-holidays")//TODO consider pagination
     public List<LocalDate> getMarketHolidays() {
         return quoteService.getMarketHolidays();
     }

@@ -25,4 +25,10 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
         String bodyOfResponse = ExceptionMessages.GENERIC_EXCEPTION_MESSAGE;
         return handleExceptionInternal(ex, bodyOfResponse, new HttpHeaders(), HttpStatus.CONFLICT, request);
     }
+
+    @ExceptionHandler(value = {LowCountOfRowsException.class})
+    protected ResponseEntity<Object> handleLowCountOfRowsException(RuntimeException ex, WebRequest request) {
+        String bodyOfResponse = ExceptionMessages.LOW_COUNT_ROWS_EXCEPTION;
+        return handleExceptionInternal(ex, bodyOfResponse, new HttpHeaders(), HttpStatus.CONFLICT, request);
+    }
 }
