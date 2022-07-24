@@ -1,6 +1,8 @@
 package com.ua.mvp.stockmarketholidaysdiscover.service;
 
 import com.ua.mvp.stockmarketholidaysdiscover.data.QuoteRowsProvider;
+import com.ua.mvp.stockmarketholidaysdiscover.exceptions.CsvRowsOrderException;
+import com.ua.mvp.stockmarketholidaysdiscover.exceptions.CsvRowsUniqueException;
 import com.ua.mvp.stockmarketholidaysdiscover.exceptions.LowCountOfRowsException;
 import com.ua.mvp.stockmarketholidaysdiscover.model.Quote;
 import com.ua.mvp.stockmarketholidaysdiscover.service.impl.QuoteRowsReader;
@@ -33,6 +35,30 @@ class QuoteServiceTest {
     }
 
     @Test
+    void whenProviderReturnsUnorderedListThrowException() {
+        //GIVEN
+        QuoteRowsProvider quoteRowsProvider = mock(QuoteRowsProvider.class);
+        QuoteService quoteService = new QuoteServiceImpl(quoteRowsProvider);
+
+        when(quoteRowsProvider.getAllRows()).thenReturn(getUnorderedQuotes());
+
+        //THEN
+        Assertions.assertThrows(CsvRowsOrderException.class, quoteService::getMarketHolidays);
+    }
+
+    @Test
+    void whenProviderReturnsNotUniqueListThrowException() {
+        //GIVEN
+        QuoteRowsProvider quoteRowsProvider = mock(QuoteRowsProvider.class);
+        QuoteService quoteService = new QuoteServiceImpl(quoteRowsProvider);
+
+        when(quoteRowsProvider.getAllRows()).thenReturn(getNotUniqueQuotes());
+
+        //THEN
+        Assertions.assertThrows(CsvRowsUniqueException.class, quoteService::getMarketHolidays);
+    }
+
+    @Test
     void whenProviderReturnsWorkingDaysQuotesReturnResult() {
         //GIVEN
         QuoteRowsProvider quoteRowsProvider = mock(QuoteRowsProvider.class);
@@ -62,8 +88,7 @@ class QuoteServiceTest {
         QuoteRowsProvider quoteRowsProvider = mock(QuoteRowsProvider.class);
         QuoteService quoteService = new QuoteServiceImpl(quoteRowsProvider);
 
-        List<Quote> quotes = getQuotesForWorkingDays();
-        quotes.add(getOneQuoteForHoliday());
+        List<Quote> quotes = getQuotes();
 
         when(quoteRowsProvider.getAllRows()).thenReturn(quotes);
 
@@ -112,16 +137,73 @@ class QuoteServiceTest {
         List<Quote> quotes = new ArrayList<>();
 
         Quote quote1 = new Quote();
-        quote1.setDate(LocalDate.of(2022, 7, 1));
+        quote1.setDate(LocalDate.of(2022, 6, 30));
         quotes.add(quote1);
 
         Quote quote2 = new Quote();
-        quote2.setDate(LocalDate.of(2022, 6, 30));
+        quote2.setDate(LocalDate.of(2022, 7, 1));
         quotes.add(quote2);
 
         Quote quote3 = new Quote();
         quote3.setDate(LocalDate.of(2022, 7, 6));
         quotes.add(quote3);
+        return quotes;
+    }
+
+    private List<Quote> getQuotes() {
+        List<Quote> quotes = new ArrayList<>();
+
+        Quote quote1 = new Quote();
+        quote1.setDate(LocalDate.of(2022, 6, 30));
+        quotes.add(quote1);
+
+        Quote quote2 = new Quote();
+        quote2.setDate(LocalDate.of(2022, 7, 1));
+        quotes.add(quote2);
+
+        Quote quote3 = new Quote();
+        quote3.setDate(LocalDate.of(2022, 7, 2));
+        quotes.add(quote3);
+
+        Quote quote4 = new Quote();
+        quote4.setDate(LocalDate.of(2022, 7, 6));
+        quotes.add(quote4);
+        return quotes;
+    }
+
+    private List<Quote> getUnorderedQuotes() {
+        List<Quote> quotes = new ArrayList<>();
+
+        Quote quote1 = new Quote();
+        quote1.setDate(LocalDate.of(2022, 6, 30));
+        quotes.add(quote1);
+
+        Quote quote2 = new Quote();
+        quote2.setDate(LocalDate.of(2022, 7, 2));
+        quotes.add(quote2);
+
+        Quote quote3 = new Quote();
+        quote3.setDate(LocalDate.of(2022, 7, 1));
+        quotes.add(quote3);
+
+        return quotes;
+    }
+
+    private List<Quote> getNotUniqueQuotes() {
+        List<Quote> quotes = new ArrayList<>();
+
+        Quote quote1 = new Quote();
+        quote1.setDate(LocalDate.of(2022, 6, 30));
+        quotes.add(quote1);
+
+        Quote quote2 = new Quote();
+        quote2.setDate(LocalDate.of(2022, 7, 2));
+        quotes.add(quote2);
+
+        Quote quote3 = new Quote();
+        quote3.setDate(LocalDate.of(2022, 7, 2));
+        quotes.add(quote3);
+
         return quotes;
     }
 
@@ -133,11 +215,5 @@ class QuoteServiceTest {
         quotes.add(quote);
 
         return quotes;
-    }
-
-    private Quote getOneQuoteForHoliday() {
-        Quote quote = new Quote();
-        quote.setDate(LocalDate.of(2022, 7, 2));
-        return quote;
     }
 }

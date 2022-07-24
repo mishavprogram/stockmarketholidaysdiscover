@@ -1,5 +1,7 @@
 package com.ua.mvp.stockmarketholidaysdiscover.controller;
 
+import com.ua.mvp.stockmarketholidaysdiscover.exceptions.CsvRowsOrderException;
+import com.ua.mvp.stockmarketholidaysdiscover.exceptions.CsvRowsUniqueException;
 import com.ua.mvp.stockmarketholidaysdiscover.exceptions.ExceptionMessages;
 import com.ua.mvp.stockmarketholidaysdiscover.exceptions.LowCountOfRowsException;
 import com.ua.mvp.stockmarketholidaysdiscover.service.QuoteService;
@@ -48,6 +50,24 @@ class MarketHolidaysControllerTest {
         this.mockMvc.perform(get(URL))
                 .andDo(print()).andExpect(status().isConflict())
                 .andExpect(content().string(containsString(ExceptionMessages.LOW_COUNT_ROWS_EXCEPTION)));
+    }
+
+    @Test
+    public void whenHttpGetAndCSVContainsUnorderedRowsReturnMessage() throws Exception {
+        when(service.getMarketHolidays()).thenThrow(CsvRowsOrderException.class);
+
+        this.mockMvc.perform(get(URL))
+                .andDo(print()).andExpect(status().isConflict())
+                .andExpect(content().string(containsString(ExceptionMessages.CSV_ROWS_ORDER_EXCEPTION)));
+    }
+
+    @Test
+    public void whenHttpGetAndCSVContainsNotUniqueRowsReturnMessage() throws Exception {
+        when(service.getMarketHolidays()).thenThrow(CsvRowsUniqueException.class);
+
+        this.mockMvc.perform(get(URL))
+                .andDo(print()).andExpect(status().isConflict())
+                .andExpect(content().string(containsString(ExceptionMessages.CSV_ROWS_NOT_UNIQUE_EXCEPTION)));
     }
 
     @Test

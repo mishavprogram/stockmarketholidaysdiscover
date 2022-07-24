@@ -31,4 +31,16 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
         String bodyOfResponse = ExceptionMessages.LOW_COUNT_ROWS_EXCEPTION;
         return handleExceptionInternal(ex, bodyOfResponse, new HttpHeaders(), HttpStatus.CONFLICT, request);
     }
+
+    @ExceptionHandler(value = {CsvRowsOrderException.class})
+    protected ResponseEntity<Object> handleCsvRowsOrderException(RuntimeException ex, WebRequest request) {
+        String bodyOfResponse = ExceptionMessages.CSV_ROWS_ORDER_EXCEPTION;
+        return handleExceptionInternal(ex, bodyOfResponse, new HttpHeaders(), HttpStatus.CONFLICT, request);
+    }
+
+    @ExceptionHandler(value = {CsvRowsUniqueException.class})
+    protected ResponseEntity<Object> handleCsvRowsUnituqxception(RuntimeException ex, WebRequest request) {
+        String bodyOfResponse = ExceptionMessages.CSV_ROWS_NOT_UNIQUE_EXCEPTION;
+        return handleExceptionInternal(ex, bodyOfResponse, new HttpHeaders(), HttpStatus.CONFLICT, request);
+    }
 }

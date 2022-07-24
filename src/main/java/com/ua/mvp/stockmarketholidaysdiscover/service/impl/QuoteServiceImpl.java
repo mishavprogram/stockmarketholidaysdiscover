@@ -1,6 +1,9 @@
 package com.ua.mvp.stockmarketholidaysdiscover.service.impl;
 
+import com.google.common.collect.Comparators;
 import com.ua.mvp.stockmarketholidaysdiscover.data.QuoteRowsProvider;
+import com.ua.mvp.stockmarketholidaysdiscover.exceptions.CsvRowsOrderException;
+import com.ua.mvp.stockmarketholidaysdiscover.exceptions.CsvRowsUniqueException;
 import com.ua.mvp.stockmarketholidaysdiscover.exceptions.LowCountOfRowsException;
 import com.ua.mvp.stockmarketholidaysdiscover.model.Quote;
 import com.ua.mvp.stockmarketholidaysdiscover.service.QuoteService;
@@ -9,9 +12,12 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
+import java.time.Period;
+import java.util.Comparator;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.stream.Stream;
+import java.util.Set;
+import java.util.TreeSet;
 
 @Component
 @AllArgsConstructor
@@ -22,22 +28,44 @@ public class QuoteServiceImpl implements QuoteService {
     public List<LocalDate> getMarketHolidays() {
         List<Quote> allRows = quoteRowsProvider.getAllRows();
 
+        checkThatQuotesAreValid(allRows);
+
+        return getMarketHolidaysForSortedUniqueRows(allRows);
+    }
+
+    private List<LocalDate> getMarketHolidaysForSortedUniqueRows(List<Quote> quotes) {
+        List<LocalDate> marketHolidays = new LinkedList<>();
+
+        for (int i = 0; i < quotes.size() - 1; i++) {
+
+            LocalDate current = quotes.get(i).getDate();
+            LocalDate next = quotes.get(i + 1).getDate();
+
+            while (Period.between(current, next).getDays() > 1) {
+                current = current.plusDays(1L);
+                if (!DateUtils.isWeekend(current)) {
+                    marketHolidays.add(current);
+                }
+            }
+        }
+
+        return marketHolidays;
+    }
+
+    private void checkThatQuotesAreValid(List<Quote> allRows) {
         if (allRows.size() < 2) {
             throw new LowCountOfRowsException();
         }
 
-        List<LocalDate> dates = allRows
-                .stream()
-                .map(Quote::getDate)
-                .toList();
+        if (!Comparators.isInOrder(allRows, Comparator.comparing(Quote::getDate))) {
+            throw new CsvRowsOrderException();
+        }
 
-        LocalDate end = dates.stream().max(LocalDate::compareTo).get();
-        LocalDate start = dates.stream().min(LocalDate::compareTo).get();
+        Set<Quote> set = new TreeSet<>(Comparator.comparing(Quote::getDate));
+        set.addAll(allRows);
 
-        return Stream.iterate(start, date -> date.plusDays(1))
-                .limit(ChronoUnit.DAYS.between(start, end))
-                .filter(x -> !DateUtils.isWeekend(x))
-                .filter(x -> !dates.contains(x))
-                .toList();
+        if (set.size() != allRows.size()) {
+            throw new CsvRowsUniqueException();
+        }
     }
 }
