@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.io.UncheckedIOException;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -104,6 +105,61 @@ class QuoteServiceTest {
         Assertions.assertFalse(marketHolidays.isEmpty());
         Assertions.assertEquals(2, marketHolidays.size());
         Assertions.assertEquals(marketHolidays, expected);
+    }
+
+    @Test
+    void whenProviderReturnsQuotesReturnResult_testSuite2() {
+        //GIVEN
+        QuoteRowsProvider quoteRowsProvider = mock(QuoteRowsProvider.class);
+        QuoteService quoteService = new QuoteServiceImpl(quoteRowsProvider);
+
+        int year = 2022;
+        int month = 7;
+
+        LocalDate wednesday = LocalDate.of(year, month, 20);
+        LocalDate thursday = LocalDate.of(year, month, 21);
+        LocalDate friday = LocalDate.of(year, month, 22);
+        LocalDate saturday = LocalDate.of(year, month, 23);
+        LocalDate sunday = LocalDate.of(year, month, 24);
+        LocalDate monday = LocalDate.of(year, month, 25);
+
+        List<Quote> quotes;
+        List<LocalDate> marketHolidays;
+
+        //WHEN
+        quotes = getQuotes(List.of(friday, monday));
+        when(quoteRowsProvider.getAllRows()).thenReturn(quotes);
+        marketHolidays = quoteService.getMarketHolidays();
+        //THEN
+        Assertions.assertTrue(marketHolidays.isEmpty());
+
+        //WHEN
+        quotes = getQuotes(List.of(thursday, monday));
+        when(quoteRowsProvider.getAllRows()).thenReturn(quotes);
+        marketHolidays = quoteService.getMarketHolidays();
+        //THEN
+        Assertions.assertEquals(List.of(friday), marketHolidays);
+
+        //WHEN
+        quotes = getQuotes(List.of(thursday, sunday));
+        when(quoteRowsProvider.getAllRows()).thenReturn(quotes);
+        marketHolidays = quoteService.getMarketHolidays();
+        //THEN
+        Assertions.assertEquals(List.of(friday), marketHolidays);
+
+        //WHEN
+        quotes = getQuotes(List.of(saturday, sunday));
+        when(quoteRowsProvider.getAllRows()).thenReturn(quotes);
+        marketHolidays = quoteService.getMarketHolidays();
+        //THEN
+        Assertions.assertTrue(marketHolidays.isEmpty());
+
+        //WHEN
+        quotes = getQuotes(List.of(wednesday, friday));
+        when(quoteRowsProvider.getAllRows()).thenReturn(quotes);
+        marketHolidays = quoteService.getMarketHolidays();
+        //THEN
+        Assertions.assertEquals(List.of(thursday), marketHolidays);
     }
 
     @Test
@@ -215,5 +271,19 @@ class QuoteServiceTest {
         quotes.add(quote);
 
         return quotes;
+    }
+
+    private List<Quote> getQuotes(List<LocalDate> dates) {
+        return dates.stream().map(x -> {
+            Quote quote = new Quote();
+            quote.setDate(x);
+            quote.setVolume(1);
+            quote.setClose(BigDecimal.ONE);
+            quote.setHigh(BigDecimal.ONE);
+            quote.setLow(BigDecimal.ONE);
+            quote.setOpen(BigDecimal.ONE);
+            quote.setAdjClose(BigDecimal.ONE);
+            return quote;
+        }).toList();
     }
 }
